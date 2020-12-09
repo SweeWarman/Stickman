@@ -1,4 +1,3 @@
-
 function Transform(theta,t,x){
     /**
      * Homogeneous transfomration
@@ -11,154 +10,155 @@ function Transform(theta,t,x){
          [Math.sin(ang),  Math.cos(ang), t[1]],
          [0.0,                 0.0,      0.0]]
 
-    tfvec = [M[0][0]*x[0] + M[0][1]*x[1] + t[0],
-             M[1][0]*x[0] + M[1][1]*x[1] + t[1]]
+    tfvec = [M[0][0]*(x[0]+t[0]) + M[0][1]*(x[1]+t[1]),
+             M[1][0]*(x[0]+t[0]) + M[1][1]*(x[1]+t[1])]
 
     return tfvec
 }
 
-
-class StickMan{
-    constructor(){
-        this.pos = [0,0]
-        this.jointAngles = {}
+class Node{
+    /**
+     * 
+     * @param {string} name id of node 
+     * @param {double} angle angle of node relative to parent
+     * @param {double} nodeLen length of node
+     * @param {[double,double]} limits constraints on rotation angles
+     * @param {[double,double]} anchor anchor point
+     */
+    constructor(name,angle,nodeLen,limits=null,anchor=null){
+        this.name        = name;          
+        this.angle       = angle;         
+        this.length      = nodeLen;      
+        this.parent      = null;        
+        this.children    = [];         
+        this.limits      = limits;    
+        if (anchor != null) {
+            this.endPosg = anchor;   
+        }else{
+            this.endPosg = [0.0,0.0];
+        }
     }
 
-    ComputePose(pos,jntAngles){
-        this.pos = pos
-        this.jointAngles = jntAngles
-        // Left leg
-        var leftKnee   = [0,50]
-        var leftFoot   = [0,50]
-        // Right leg
-        var rightKnee  = [0,50]
-        var rightFoot  = [0,50]
+    AddChildren(children){
+        children.forEach(element => {
+           element.parent = this;
+           this.children.push(element);   
+        });
+    }
 
-        // Torso
-        var torso      = [0,-60]
+    UpdateJointAngle(angle){
+        this.angle = angle;
+    }
 
-        // Left arm
-        var leftElbow  = [-40,0]
-        var leftWrist  = [-35,0]
+    ComputePose(vec=null){
+        if(vec == null){
+            if(this.parent != null){
+                var x = Transform(this.angle,[0,0],[this.length,0])
+                this.endPosg = this.parent.ComputePose(x)
+            }
+        }else{
+            if(this.parent != null){
+                var x = Transform(this.angle,[this.length,0],vec)
+                return this.parent.ComputePose(x)
+            }else{
+                return Transform(0,this.endPosg,vec)
+            }
+        }
 
-        // Right arm
-        var rightElbow  = [40,0]
-        var rightWrist  = [35,0]
+    }
 
-        var neck = [0,-10]
-
-        // Global position of left knee
-        var x1a       = Transform(this.jointAngles['leftKnee'],[0,0],leftKnee)
-        var gLeftKnee = Transform(0.0,this.pos,x1a)
-
-        // Global position of left foot
-        var x2a       = Transform(this.jointAngles['leftFoot'],[0,0],leftFoot)
-        var x2b       = Transform(this.jointAngles['leftKnee'],x1a,x2a)
-        var gLeftFoot = Transform(0.0,this.pos,x2b)
-
-        // Global position of right knee
-        var x3a        = Transform(this.jointAngles['rightKnee'],[0,0],rightKnee)
-        var gRightKnee = Transform(0.0,this.pos,x3a)
-
-        // Global position of right foot
-        var x4a        = Transform(this.jointAngles['rightFoot'],[0,0],rightFoot)
-        var x4b        = Transform(this.jointAngles['rightKnee'],x3a,x4a)
-        var gRightFoot = Transform(0.0,this.pos,x4b)
-
-        
-        // Global position of torso
-        var x5a        = Transform(this.jointAngles['torso'],[0,0],torso)
-        var gTorso     = Transform(0.0,this.pos,x5a)
-
-        // Global position of left elbow
-        var x6a        = Transform(this.jointAngles["leftElbow"],[0,0],leftElbow)
-        var x6b        = Transform(this.jointAngles["torso"],x5a,x6a)
-        var gLeftElbow = Transform(0.0,this.pos,x6b)
-
-        // Global position of left wrist
-        var x8a         = Transform(this.jointAngles["leftWrist"],[0,0],leftWrist)
-        var x8b         = Transform(this.jointAngles["leftElbow"],x6a,x8a)
-        var x8c         = Transform(this.jointAngles["torso"],x5a,x8b)
-        var gLeftWrist  = Transform(0.0,this.pos,x8c)
-
-
-        // Global position of right elbow
-        var x7a         = Transform(this.jointAngles["rightElbow"],[0,0],rightElbow)
-        var x7b         = Transform(this.jointAngles["torso"],x5a,x7a)
-        var gRightElbow = Transform(0.0,this.pos,x7b)
-
-        
-        // Global position of right wrist
-        var x9a         = Transform(this.jointAngles["rightWrist"],[0,0],rightWrist)
-        var x9b         = Transform(this.jointAngles["rightElbow"],x7a,x9a)
-        var x9c         = Transform(this.jointAngles["torso"],x5a,x9b)
-        var gRightWrist = Transform(0.0,this.pos,x9c)
-
-        // Global position of neck
-        var x10a        = Transform(0,[0,0],neck)
-        var x10b        = Transform(this.jointAngles["torso"],x5a,x10a)
-        var gNeck       = Transform(0.0,this.pos,x10b)
-
-        return {"pos":pos,
-                "leftFoot":gLeftFoot,
-                "rightFoot": gRightFoot,
-                "leftKnee": gLeftKnee,
-                "rightKnee": gRightKnee,
-                "torso": gTorso,
-                "leftElbow": gLeftElbow,
-                "rightElbow": gRightElbow,
-                "leftWrist": gLeftWrist,
-                "rightWrist": gRightWrist,
-                "neck":gNeck,
-                "neckAngle":this.jointAngles["torso"]}
+    DrawNode(context,linewidth,linecolor="black"){
+        if (this.parent != null) {
+            context.beginPath();
+            context.lineWidth = linewidth
+            context.strokeStyle = linecolor
+            context.moveTo(this.parent.endPosg[0], this.parent.endPosg[1])
+            context.lineTo(this.endPosg[0],this.endPosg[1])
+            context.stroke();
+        }
     }
 }
 
-function DrawFigure(pose) {
+function NewStickMan() {
+    /**
+     * Create a new stick man instace
+     */
+    var stickman   = new Node("root", 0, 0,limits=null, anchor=[200,200])
+    var leftKnee   = new Node("leftKnee", 90, 50, limits = [-10, 135])
+    var leftFoot   = new Node("leftFoot", 0, 50, limits = [0, 135])
+    var rightKnee  = new Node("rightKnee", 90, 50, limits = [-10, 135])
+    var rightFoot  = new Node("rightFoot", 0, 50, limits = [0, 135])
+    var torso      = new Node("torso", -90, 50, limits = [-135, 45])
+    var leftElbow  = new Node("leftElbow", -90, 30)
+    var leftWrist  = new Node("leftWrist", 0, 30, limits = [-150, 135])
+    var rightElbow = new Node("rightElbow", 90, 30)
+    var rightWrist = new Node("rightWrist", 0, 30, limits = [-150, 135])
+    var neck       = new Node("neck",0,7)
 
-    ctx.lineWidth=3
-    ctx.beginPath();
-    ctx.moveTo(pose["pos"][0], pose["pos"][1]);
-    ctx.lineTo(pose["leftKnee"][0], pose["leftKnee"][1]);
-    ctx.lineTo(pose["leftFoot"][0], pose["leftFoot"][1]);
-    ctx.moveTo(pose["pos"][0], pose["pos"][1]);
-    ctx.lineTo(pose["rightKnee"][0], pose["rightKnee"][1]);
-    ctx.lineTo(pose["rightFoot"][0], pose["rightFoot"][1]);
-    ctx.moveTo(pose["pos"][0], pose["pos"][1]);
-    ctx.lineTo(pose["torso"][0], pose["torso"][1]);
-    ctx.moveTo(pose["torso"][0], pose["torso"][1]);
-    ctx.lineTo(pose["leftElbow"][0], pose["leftElbow"][1]);
-    ctx.lineTo(pose["leftWrist"][0], pose["leftWrist"][1]);
-    ctx.moveTo(pose["torso"][0], pose["torso"][1]);
-    ctx.lineTo(pose["rightElbow"][0], pose["rightElbow"][1]);
-    ctx.lineTo(pose["rightWrist"][0], pose["rightWrist"][1]);
-    ctx.moveTo(pose["torso"][0], pose["torso"][1]);
-    ctx.lineTo(pose["neck"][0], pose["neck"][1]);
-    ctx.stroke();
+    leftKnee.AddChildren([leftFoot])
+    rightKnee.AddChildren([rightFoot])
+    rightElbow.AddChildren([rightWrist])
+    leftElbow.AddChildren([leftWrist])
+    torso.AddChildren([leftElbow, rightElbow, neck])
+    stickman.AddChildren([torso,leftKnee, rightKnee])
+    return stickman;
+}
 
-    ctx.beginPath();
-    ctx.moveTo(pose["torso"][0], pose["torso"][1]);
-    dx = (pose["neck"][0] - pose["torso"][0])
-    dy = (pose["neck"][1] - pose["torso"][1])
-    ang = pose["neckAngle"]*Math.PI/180
-    ctx.arc(pose["neck"][0]+dx,pose["neck"][1]+dy,10,ang+Math.PI/2,ang + Math.PI/2 +Math.PI*2)
-    ctx.stroke()
 
+function UpdatePose(stickman,newpose){
+    /**
+     * stickman: object whose pose must be updated
+     * newpose: new pose
+     */
+    var nodeToCompute = Array.from(stickman.children)
+    while (nodeToCompute.length > 0) {
+        const element = nodeToCompute.shift();
+        nodeToCompute = nodeToCompute.concat(element.children);
+        element.UpdateJointAngle(newpose[element.name])
+        element.ComputePose();
+    }
+}
+
+function DrawStickMan(stickman, ctx) {
+    /**
+     * stickman: object to be drawn on the canvas.
+     * ctx: context containing a canvas
+     */
+    var nodeToDraw = Array.from(stickman.children)
+    while (nodeToDraw.length > 0) {
+        const element = nodeToDraw.shift();
+        nodeToDraw = nodeToDraw.concat(element.children);
+        element.DrawNode(ctx,3)
+
+        if (element.name == "neck") {
+            ctx.beginPath();
+            ctx.moveTo(element.endPosg[0], element.endPosg[1]);
+            dx  = (element.endPosg[0] - element.parent.endPosg[0])
+            dy  = (element.endPosg[1] - element.parent.endPosg[1])
+            ang = element.angle * Math.PI / 180
+            ctx.lineWidth=1
+            ctx.arc(element.endPosg[0] + dx, element.endPosg[1] + dy, 10, ang + Math.PI / 2, ang + Math.PI / 2 + Math.PI * 2)
+            ctx.fill()
+            ctx.stroke()
+        }
+    }
 }
 
 var canvas = document.getElementById("myCanvas")
 var ctx = canvas.getContext("2d");
 
-var fig = new StickMan()
-var pose = fig.ComputePose([200,200],{
-    "leftFoot": 10,
-    "leftKnee": 10,
-    "rightFoot": 10,
-    "rightKnee": -20,
-    "torso": 30,
-    "leftElbow":10,
-    "rightElbow":-20,
-    "leftWrist": 10,
-    "rightWrist": -20
-})
-DrawFigure(pose)
+stickman = NewStickMan()
+defaultPose = {
+                 "leftKnee": 95,
+                 "leftFoot": 10,
+                 "rightKnee": 85,
+                 "rightFoot": 0,
+                 "torso": -90,
+                 "leftElbow": -135,
+                 "leftWrist": -10,
+                 "rightElbow": 135,
+                 "rightWrist": 10,
+                 "neck": 0
+              }
+UpdatePose(stickman,defaultPose)
+DrawStickMan(stickman,ctx)
