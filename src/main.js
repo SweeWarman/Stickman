@@ -66,17 +66,6 @@ class Node{
         }
 
     }
-
-    DrawNode(context,linewidth,linecolor="black"){
-        if (this.parent != null) {
-            context.beginPath();
-            context.lineWidth = linewidth
-            context.strokeStyle = linecolor
-            context.moveTo(this.parent.endPosg[0], this.parent.endPosg[1])
-            context.lineTo(this.endPosg[0],this.endPosg[1])
-            context.stroke();
-        }
-    }
 }
 
 function NewStickMan() {
@@ -119,7 +108,7 @@ function UpdatePose(stickman,newpose){
     }
 }
 
-function DrawStickMan(stickman, ctx) {
+function DrawStickMan(stickman) {
     /**
      * stickman: object to be drawn on the canvas.
      * ctx: context containing a canvas
@@ -128,18 +117,24 @@ function DrawStickMan(stickman, ctx) {
     while (nodeToDraw.length > 0) {
         const element = nodeToDraw.shift();
         nodeToDraw = nodeToDraw.concat(element.children);
-        element.DrawNode(ctx,3)
-
+        var path = new paper.Path()
+        path.strokeWidth=3
+        path.strokeColor="black"
+        path.add(new paper.Point(element.parent.endPosg[0],element.parent.endPosg[1]))
+        path.add(new paper.Point(element.endPosg[0],element.endPosg[1]))
         if (element.name == "neck") {
-            ctx.beginPath();
-            ctx.moveTo(element.endPosg[0], element.endPosg[1]);
             dx  = (element.endPosg[0] - element.parent.endPosg[0])
             dy  = (element.endPosg[1] - element.parent.endPosg[1])
-            ang = element.angle * Math.PI / 180
-            ctx.lineWidth=1
-            ctx.arc(element.endPosg[0] + dx, element.endPosg[1] + dy, 10, ang + Math.PI / 2, ang + Math.PI / 2 + Math.PI * 2)
-            ctx.fill()
-            ctx.stroke()
+            center = [element.endPosg[0] + dx,element.endPosg[1] + dy]
+            var path2 = new paper.Path.Circle(new paper.Point(center[0],center[1]),10)
+            path2.strokeWidth=1
+            path2.strokeColor="black"
+            path2.fillColor="black"
+        }else{
+            path.onMouseDown = function(event){
+                selection = element.name;
+                console.log(selection)
+            }
         }
     }
 }
@@ -161,4 +156,13 @@ defaultPose = {
                  "neck": 0
               }
 UpdatePose(stickman,defaultPose)
-DrawStickMan(stickman,ctx)
+selection = null
+
+window.onload = function () {
+    // Get a reference to the canvas object
+    var canvas = document.getElementById('myCanvas');
+    // Create an empty project and a view for the canvas:
+    paper.setup(canvas);
+    DrawStickMan(stickman);
+}
+
