@@ -94,7 +94,7 @@ function NewStickMan() {
 }
 
 
-function UpdatePose(stickman,newpose){
+function UpdatePose(stickman,newpose=null){
     /**
      * stickman: object whose pose must be updated
      * newpose: new pose
@@ -103,7 +103,9 @@ function UpdatePose(stickman,newpose){
     while (nodeToCompute.length > 0) {
         const element = nodeToCompute.shift();
         nodeToCompute = nodeToCompute.concat(element.children);
-        element.UpdateJointAngle(newpose[element.name])
+        if(newpose != null){
+            element.UpdateJointAngle(newpose[element.name])
+        }
         element.ComputePose();
     }
 }
@@ -132,18 +134,14 @@ function DrawStickMan(stickman) {
             path2.fillColor="black"
         }else{
             path.onMouseDown = function(event){
-                selection = element.name;
-                console.log(selection)
+                selection = element;
             }
         }
     }
 }
 
-var canvas = document.getElementById("myCanvas")
-var ctx = canvas.getContext("2d");
-
-stickman = NewStickMan()
-defaultPose = {
+let stickman = NewStickMan()
+let defaultPose = {
                  "leftKnee": 95,
                  "leftFoot": 10,
                  "rightKnee": 85,
@@ -156,12 +154,38 @@ defaultPose = {
                  "neck": 0
               }
 UpdatePose(stickman,defaultPose)
-selection = null
+
+function angle(X1,X2){
+   return (2*Math.PI + Math.atan2(X2[1]-X1[1],X2[0]-X1[0]))%(2*Math.PI)
+}
+
+let selection = null
+
+let tool = new paper.Tool()
+
+tool.onMouseDrag = function (event) {
+    if (selection != null) {
+        let location = event.point
+        let currJointAngle = angle(selection.parent.endPosg,selection.endPosg) 
+        let newJointAngle  = angle(selection.parent.endPosg,[event.point.x,event.point.y])
+        let diff1 = currJointAngle - newJointAngle
+        selection.UpdateJointAngle(selection.angle - diff1*180/Math.PI)
+        UpdatePose(stickman)
+        paper.project.clear();
+        DrawStickMan(stickman);
+    }
+}
+
+tool.onMouseUp = function (event) {
+    selection = null;
+}
+
 
 window.onload = function () {
     // Get a reference to the canvas object
     var canvas = document.getElementById('myCanvas');
     // Create an empty project and a view for the canvas:
+
     paper.setup(canvas);
     DrawStickMan(stickman);
 }
