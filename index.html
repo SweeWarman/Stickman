@@ -7,10 +7,27 @@
   <title>Ths StickMan Animator</title>
   <meta name="description" content="StickMan Animator App">
   <meta name="author" content="Swee Warman">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <canvas id="myCanvas" width="500" height="500"></canvas>
+  <div id="panel">
+    <div id="left-panel">
+      <canvas id="myCanvas" width="400" height="400"></canvas>
+      <div class="slidecontainer">
+        <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+        <input type="number" id="endtime" name="endtime" value="5" size="5">
+        <button><i class="fa fa-camera" style="color:red"></i></button>
+        <button><i class="fa fa-play"></i></button>
+        <button><i class="fa fa-pause"></i></button>
+        <button><i class="fa fa-stop"></i></button>
+      </div>
+    </div>
+    <div id="right-panel">
+      <p>This is the left panel</p>
+    </div>
+  </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.11/paper-full.min.js"></script>
   <script src="src/main.js"></script>
 </body>

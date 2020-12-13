@@ -1,0 +1,29 @@
+#left-panel {
+  width: 480px;
+  height: 500px;
+  margin: 0px;
+  padding: 0px;
+  float: left;
+}
+
+
+canvas {
+  border: 1px solid black;
+  margin-left: 50px;
+}
+
+.slidecontainer {
+    width: 410px;
+    margin-left: 45px;
+    margin-right: 1px;
+}
+
+.slider{
+    width: 86%;
+    display: inline-block;
+}
+
+#endtime{
+  width: 40px;
+  display: inline-block;
+}
