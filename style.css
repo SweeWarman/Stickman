@@ -1,29 +1,57 @@
-#left-panel {
-  width: 480px;
-  height: 500px;
-  margin: 0px;
-  padding: 0px;
-  float: left;
+html, body{
+  width: 99%;
+  height: 97%;
 }
 
+#panel{
+  height: 100%;
+  padding: 10px;
+  border: 1px solid red;
+  overflow: auto;
+}
 
-canvas {
-  border: 1px solid black;
-  margin-left: 50px;
+#sub-panel {
+  width: 45%;
+  height: 90%;
+  float: left;
+  border: 1px solid blue;
+  text-align: center; 
+}
+
+#myCanvas {
+  /* display: inline-block; */
+  border: 1px solid green;
+  margin-top: 1%;
 }
 
 .slidecontainer {
-    width: 410px;
-    margin-left: 45px;
-    margin-right: 1px;
+  /* display: inline-block; */
+  width: 75%;
+  margin: 0 auto;
 }
 
 .slider{
     width: 86%;
-    display: inline-block;
 }
 
 #endtime{
   width: 40px;
-  display: inline-block;
+}
+
+#pose{
+  border: 1px solid black;
+}
+
+#snapshots{
+  margin: 0 10px;
+  border: 1px solid red;
+  text-align: initial;
+}
+
+#image-panel{
+  height: 32%;
+  border: 1px solid rebeccapurple;
+  overflow-y: hidden;
+  overflow-x: scroll;
+  white-space: nowrap;
 }

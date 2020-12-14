@@ -66,7 +66,17 @@ class Node{
         }
 
     }
+
+    
 }
+
+function GetCurrentPose(node,pose={}){
+    pose.node.name = node.angle;
+    node.chidlen.forEach(element => {
+       GetCurrentPose(element,pose);
+    })
+}
+
 
 function NewStickMan() {
     /**
@@ -180,13 +190,30 @@ tool.onMouseUp = function (event) {
     selection = null;
 }
 
+let canvas = null
+
+recordSnapShot = function(event){
+
+}
+
 
 window.onload = function () {
     // Get a reference to the canvas object
-    var canvas = document.getElementById('myCanvas');
+    canvas = document.getElementById('myCanvas');
     // Create an empty project and a view for the canvas:
 
     paper.setup(canvas);
-    DrawStickMan(stickman);
+    paper.view.autoUpdate = false;
+    paper.view.onFrame=function(event){
+        DrawStickMan(stickman);
+        paper.view.update();
+    }
+    //paper.view.draw();
+
+    /*
+    var shot = canvas.toDataURL('image/png')
+    console.log(shot)
+    var imgTag = document.getElementById('pose')
+    imgTag.src = shot*/
 }
 

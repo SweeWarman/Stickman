@@ -13,8 +13,8 @@
 
 <body>
   <div id="panel">
-    <div id="left-panel">
-      <canvas id="myCanvas" width="400" height="400"></canvas>
+    <div id="sub-panel">
+      <canvas id="myCanvas" width="400px" height="400px"></canvas>
       <div class="slidecontainer">
         <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
         <input type="number" id="endtime" name="endtime" value="5" size="5">
@@ -24,8 +24,13 @@
         <button><i class="fa fa-stop"></i></button>
       </div>
     </div>
-    <div id="right-panel">
-      <p>This is the left panel</p>
+    <div id="sub-panel">
+      <div id="snapshots">
+        <p>Selected poses:</p>
+        <div id="image-panel">
+          <img id="pose" src="" width="100px" height="100px" alt="t=0" />
+        </div>
+      </div>
     </div>
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.11/paper-full.min.js"></script>
