@@ -66,13 +66,11 @@ class Node{
         }
 
     }
-
-    
 }
 
 function GetCurrentPose(node,pose={}){
     pose.node.name = node.angle;
-    node.chidlen.forEach(element => {
+    node.forEach(element => {
        GetCurrentPose(element,pose);
     })
 }
@@ -104,50 +102,41 @@ function NewStickMan() {
 }
 
 
-function UpdatePose(stickman,newpose=null){
-    /**
-     * stickman: object whose pose must be updated
-     * newpose: new pose
-     */
-    var nodeToCompute = Array.from(stickman.children)
-    while (nodeToCompute.length > 0) {
-        const element = nodeToCompute.shift();
-        nodeToCompute = nodeToCompute.concat(element.children);
-        if(newpose != null){
-            element.UpdateJointAngle(newpose[element.name])
-        }
-        element.ComputePose();
+function UpdatePose(node,newpose=null){
+    if(newpose != null && node.name != "root"){
+        node.UpdateJointAngle(newpose[node.name])
     }
+    node.ComputePose();
+    node.children.forEach(element => UpdatePose(element,newpose))
 }
 
-function DrawStickMan(stickman) {
+function DrawStickMan(node) {
     /**
      * stickman: object to be drawn on the canvas.
      * ctx: context containing a canvas
      */
-    var nodeToDraw = Array.from(stickman.children)
-    while (nodeToDraw.length > 0) {
-        const element = nodeToDraw.shift();
-        nodeToDraw = nodeToDraw.concat(element.children);
+    
+    if (node.name != "root") {
         var path = new paper.Path()
-        path.strokeWidth=3
-        path.strokeColor="black"
-        path.add(new paper.Point(element.parent.endPosg[0],element.parent.endPosg[1]))
-        path.add(new paper.Point(element.endPosg[0],element.endPosg[1]))
-        if (element.name == "neck") {
-            dx  = (element.endPosg[0] - element.parent.endPosg[0])
-            dy  = (element.endPosg[1] - element.parent.endPosg[1])
-            center = [element.endPosg[0] + dx,element.endPosg[1] + dy]
-            var path2 = new paper.Path.Circle(new paper.Point(center[0],center[1]),10)
-            path2.strokeWidth=1
-            path2.strokeColor="black"
-            path2.fillColor="black"
-        }else{
-            path.onMouseDown = function(event){
-                selection = element;
+        path.strokeWidth = 3
+        path.strokeColor = "black"
+        path.add(new paper.Point(node.parent.endPosg[0], node.parent.endPosg[1]))
+        path.add(new paper.Point(node.endPosg[0], node.endPosg[1]))
+        if (node.name == "neck") {
+            dx = (node.endPosg[0] - node.parent.endPosg[0])
+            dy = (node.endPosg[1] - node.parent.endPosg[1])
+            center = [node.endPosg[0] + dx, node.endPosg[1] + dy]
+            var path2 = new paper.Path.Circle(new paper.Point(center[0], center[1]), 10)
+            path2.strokeWidth = 1
+            path2.strokeColor = "black"
+            path2.fillColor = "black"
+        } else {
+            path.onMouseDown = function (event) {
+                selection = node;
             }
         }
     }
+    node.children.forEach(element => DrawStickMan(element))
 }
 
 let stickman = NewStickMan()
