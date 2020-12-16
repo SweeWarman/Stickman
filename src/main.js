@@ -4,18 +4,26 @@ import * as Node from './node.js';
 let canvas = null;
 let tool = new paper.Tool()
 
-let selection = null
 let defaultPose = {
     "leftKnee": 95, "leftFoot": 10, "rightKnee": 85, 
     "rightFoot": 0, "torso": -90, "leftElbow": -135,
     "leftWrist": -10, "rightElbow": 135,
-    "rightWrist": 10, "neck": 0 }
+    "rightWrist": 10, "neck": 0 
+};
+
+let appState = {
+    selectedPart  : null,          // part selected via mouse interactions
+    currentPose   : defaultPose,   // current pose of stickman
+    recordedPoses : [],            // array of (t,pose,imgurl) of the poses selected
+    slider        : null,          // current slider value
+    maxTime       : 5,             // max slider value 
+};
 
 // Create a stickman
 let stickman = Node.NewStickMan()
 
 // Update stickman with default pose
-Node.UpdatePose(stickman,defaultPose)
+Node.UpdatePose(stickman,appState.currentPose)
 
 // Function to draw the stickman
 function DrawStickMan(node) {
@@ -36,7 +44,7 @@ function DrawStickMan(node) {
         } else {
             //add callback to path segment to record selected joint
             path.onMouseDown = function (event) {
-                selection = node;
+                appState.selectedPart = node;
             }
         }
     }
@@ -45,12 +53,12 @@ function DrawStickMan(node) {
 
 // callback to change pose when joint is moved
 tool.onMouseDrag = function (event) {
-    if (selection != null) {
+    if (appState.selectedPart != null) {
         let location = event.point
-        let currJointAngle = Node.angle(selection.parent.endPosg,selection.endPosg) 
-        let newJointAngle  = Node.angle(selection.parent.endPosg,[event.point.x,event.point.y])
+        let currJointAngle = Node.angle(appState.selectedPart.parent.endPosg,appState.selectedPart.endPosg) 
+        let newJointAngle  = Node.angle(appState.selectedPart.parent.endPosg,[event.point.x,event.point.y])
         let diff1 = currJointAngle - newJointAngle
-        selection.UpdateJointAngle(selection.angle - diff1*180/Math.PI)
+        appState.selectedPart.UpdateJointAngle(appState.selectedPart.angle - diff1*180/Math.PI)
         Node.UpdatePose(stickman)
         paper.project.clear();
         DrawStickMan(stickman);
@@ -59,7 +67,7 @@ tool.onMouseDrag = function (event) {
 
 // callback to disable selection
 tool.onMouseUp = function (event) {
-    selection = null;
+    appState.selectedPart = null;
 }
 
 
@@ -67,12 +75,32 @@ let recordSnapShot = function(event){
 
 }
 
+let endTimeOnChange = function(){
+    appState.maxTime = document.getElementById('endtime').value;
+    appState.slider.max = appState.maxTime
+    console.log(appState.maxTime)
+}
+
+let sliderOnChange = function(){
+    console.log(appState.slider.value)
+}
 
 window.onload = function () {
     // Get a reference to the canvas object
     canvas = document.getElementById('myCanvas');
-    // Create an empty project and a view for the canvas:
 
+    appState.maxTime = document.getElementById('endtime').value;
+    appState.slider  = document.getElementById('timeRange'); 
+    appState.slider.min = 0
+    appState.slider.max = appState.maxTime
+    appState.slider.step = 0.1
+    appState.slider.value = appState.slider.min
+
+    appState.slider.onchange = sliderOnChange
+    document.getElementById('endtime').onchange = endTimeOnChange
+    
+
+    // Create an empty project and a view for the canvas:
     paper.setup(canvas);
     paper.view.autoUpdate = false;
     paper.view.onFrame=function(event){
