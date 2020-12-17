@@ -6,22 +6,22 @@ html, body{
 #panel{
   height: 100%;
   padding: 10px;
-  border: 1px solid red;
   overflow: auto;
+  /*border: 1px solid red;*/
 }
 
 #sub-panel {
   width: 45%;
   height: 90%;
   float: left;
-  border: 1px solid blue;
   text-align: center; 
+  /*border: 1px solid blue;*/
 }
 
 #myCanvas {
   /* display: inline-block; */
-  border: 1px solid green;
   margin-top: 1%;
+  border: 2px solid black;
 }
 
 .slidecontainer {
@@ -39,19 +39,19 @@ html, body{
 }
 
 #pose{
-  border: 1px solid black;
+  /*border: 1px solid black;*/
 }
 
 #snapshots{
   margin: 0 10px;
-  border: 1px solid red;
   text-align: initial;
+  /*border: 1px solid red;*/
 }
 
 #image-panel{
   height: 32%;
-  border: 1px solid rebeccapurple;
   overflow-y: hidden;
   overflow-x: scroll;
   white-space: nowrap;
+  border: 2px solid black;
 }

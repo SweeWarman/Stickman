@@ -73,8 +73,8 @@ class Node{
 }
 
 export function GetCurrentPose(node,pose={}){
-    pose.node.name = node.angle;
-    node.forEach(element => {
+    pose[node.name] = node.angle
+    node.children.forEach(element => {
        GetCurrentPose(element,pose);
     })
 }

@@ -17,6 +17,8 @@ let appState = {
     recordedPoses : [],            // array of (t,pose,imgurl) of the poses selected
     slider        : null,          // current slider value
     maxTime       : 5,             // max slider value 
+    update        : true,
+    intpfun       : null           // timeout function for interpolation
 };
 
 // Create a stickman
@@ -51,6 +53,48 @@ function DrawStickMan(node) {
     node.children.forEach(element => DrawStickMan(element))
 }
 
+function InterpolatePoses(t){
+
+   let interpolateJoints = function(i,t,name){
+      let j1 = appState.recordedPoses[i-1][1][name]
+      let j2 = appState.recordedPoses[i][1][name]
+      let t1 = appState.recordedPoses[i-1][0]
+      let t2 = appState.recordedPoses[i][0]
+      let j  = j1 + (j2-j1)*(t - t1)/(t2-t1)
+      return j
+   }
+   for(let i=1;i<appState.recordedPoses.length;++i){
+       if (t >= appState.recordedPoses[i-1][0] && t < appState.recordedPoses[i][0]){
+            let l1 = interpolateJoints(i,t,"leftKnee");
+            let l2 = interpolateJoints(i,t,"leftFoot");
+            let l3 = interpolateJoints(i,t,"leftElbow");
+            let l4 = interpolateJoints(i,t,"leftWrist");
+            let l5 = interpolateJoints(i,t,"rightKnee");
+            let l6 = interpolateJoints(i,t,"rightFoot");
+            let l7 =  interpolateJoints(i,t,"rightElbow");
+            let l8 =  interpolateJoints(i,t,"rightWrist");
+            let l9 =  interpolateJoints(i,t,"torso");
+            let l10=  interpolateJoints(i,t,"neck");
+            let pose = {
+               "leftKnee" : l1,
+               "leftFoot" : l2,
+               "leftElbow" : l3,
+               "leftWrist" : l4,
+               "rightKnee" : l5,
+               "rightFoot" : l6,
+               "rightElbow" : l7,
+               "rightWrist" : l8,
+               "torso" :l9,
+               "neck" :l10
+           }
+           return pose
+       }
+   }
+   let pose = {}
+   Node.GetCurrentPose(stickman,pose)
+   return pose
+}
+
 // callback to change pose when joint is moved
 tool.onMouseDrag = function (event) {
     if (appState.selectedPart != null) {
@@ -60,19 +104,33 @@ tool.onMouseDrag = function (event) {
         let diff1 = currJointAngle - newJointAngle
         appState.selectedPart.UpdateJointAngle(appState.selectedPart.angle - diff1*180/Math.PI)
         Node.UpdatePose(stickman)
-        paper.project.clear();
-        DrawStickMan(stickman);
+        //DrawStickMan(stickman);
+        appState.update = true
     }
 }
+
 
 // callback to disable selection
 tool.onMouseUp = function (event) {
     appState.selectedPart = null;
 }
 
+let playOnClick = function(){
+    //Play from current time
+    appState.intpfun = setInterval(interpolate,10);    
+}
 
-let recordSnapShot = function(event){
-
+let interpolate = function(){
+    console.log('interpolating....')
+    let t = parseFloat(appState.slider.value)
+    let pose = InterpolatePoses(t) 
+    Node.UpdatePose(stickman,pose)
+    t += 0.1
+    appState.slider.value = t.toString()
+    document.getElementById('endtime').value = appState.slider.value
+    if(t >= parseFloat(appState.maxTime)){
+        clearInterval(appState.intpfun)
+    }
 }
 
 let endTimeOnChange = function(){
@@ -83,6 +141,36 @@ let endTimeOnChange = function(){
 
 let sliderOnChange = function(){
     console.log(appState.slider.value)
+    document.getElementById('endtime').value = appState.slider.value
+}
+
+let snapOnClick = function(){
+    let poset = parseFloat(appState.slider.value)
+    let availindex = -1
+    for(let i=0;i<appState.recordedPoses.length;++i){
+        if(poset == appState.recordedPoses[i][0]){
+            availindex = i
+            return
+        }
+    }
+    var shot = canvas.toDataURL('image/png')
+    let pose = {}
+    Node.GetCurrentPose(stickman,pose) 
+    if(availindex < 0){
+        appState.recordedPoses.push([poset,pose,shot])
+    }else{
+        appState.recordedPoses[i][1] = pose
+        appState.recordedPoses[i][2] = shot
+    }
+
+    
+    document.getElementById('image-panel').innerHTML = ''
+    appState.recordedPoses.forEach(element => { 
+        var img = document.createElement("img");
+        img.setAttribute("src",element[2])
+        img.setAttribute("width","100px")
+        img.setAttribute("height","100px")
+        document.getElementById('image-panel').appendChild(img)})
 }
 
 window.onload = function () {
@@ -93,25 +181,22 @@ window.onload = function () {
     appState.slider  = document.getElementById('timeRange'); 
     appState.slider.min = 0
     appState.slider.max = appState.maxTime
-    appState.slider.step = 0.1
+    appState.slider.step = 0.01
     appState.slider.value = appState.slider.min
 
     appState.slider.onchange = sliderOnChange
     document.getElementById('endtime').onchange = endTimeOnChange
-    
-
+    document.getElementById('snap').onclick = snapOnClick
+    document.getElementById('play').onclick = playOnClick
+    document.getElementById('stop').onclick = function(){clearInterval(appState.intpfun)}
+     
     // Create an empty project and a view for the canvas:
     paper.setup(canvas);
     paper.view.autoUpdate = false;
     paper.view.onFrame=function(event){
+        paper.project.clear();
         DrawStickMan(stickman);
         paper.view.update();
     }
-    //paper.view.draw();
-    /*
-    var shot = canvas.toDataURL('image/png')
-    console.log(shot)
-    var imgTag = document.getElementById('pose')
-    imgTag.src = shot*/
 }
 
