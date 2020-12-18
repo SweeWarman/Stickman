@@ -3,6 +3,12 @@ html, body{
   height: 97%;
 }
 
+h1 {
+  font-family: monospace;
+  color: gray;
+  text-shadow: 1px 1px 3px gray;
+}
+
 #panel{
   height: 100%;
   padding: 10px;
