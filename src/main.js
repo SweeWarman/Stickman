@@ -13,12 +13,14 @@ let defaultPose = {
 
 let appState = {
     selectedPart  : null,          // part selected via mouse interactions
+    selectedPos   : null,          // initial mouse location
     currentPose   : defaultPose,   // current pose of stickman
     recordedPoses : [],            // array of (t,pose,imgurl) of the poses selected
     slider        : null,          // current slider value
     maxTime       : 5,             // max slider value 
     update        : true,
-    intpfun       : null           // timeout function for interpolation
+    intpfun       : null,          // timeout function for interpolation
+    keypress      : null      
 };
 
 // Create a stickman
@@ -31,8 +33,13 @@ Node.UpdatePose(stickman,appState.currentPose)
 function DrawStickMan(node) {
     if (node.name != "root") {
         var path = new paper.Path()
-        path.strokeWidth = 3
+        path.strokeWidth = 8
         path.strokeColor = "black"
+        if(appState.selectedPart != null){
+            if(appState.selectedPart.name == node.name){
+                path.strokeColor = "green"
+            }
+        }
         path.add(new paper.Point(node.parent.endPosg[0], node.parent.endPosg[1]))
         path.add(new paper.Point(node.endPosg[0], node.endPosg[1]))
         if (node.name == "neck") {
@@ -43,10 +50,16 @@ function DrawStickMan(node) {
             path2.strokeWidth = 1
             path2.strokeColor = "black"
             path2.fillColor = "black"
-        } else {
+            //callback for head selection
+            path2.onMouseDown = function (event) {
+                appState.selectedPart = node;
+                appState.selectedPos = [event.point.x,event.point.y]
+            }
+        }else {
             //add callback to path segment to record selected joint
             path.onMouseDown = function (event) {
                 appState.selectedPart = node;
+                appState.selectedPos = [event.point.x,event.point.y]
             }
         }
     }
@@ -104,7 +117,6 @@ tool.onMouseDrag = function (event) {
         let diff1 = currJointAngle - newJointAngle
         appState.selectedPart.UpdateJointAngle(appState.selectedPart.angle - diff1*180/Math.PI)
         Node.UpdatePose(stickman)
-        //DrawStickMan(stickman);
         appState.update = true
     }
 }
@@ -150,7 +162,7 @@ let snapOnClick = function(){
     for(let i=0;i<appState.recordedPoses.length;++i){
         if(poset == appState.recordedPoses[i][0]){
             availindex = i
-            return
+            break
         }
     }
     var shot = canvas.toDataURL('image/png')
@@ -159,8 +171,8 @@ let snapOnClick = function(){
     if(availindex < 0){
         appState.recordedPoses.push([poset,pose,shot])
     }else{
-        appState.recordedPoses[i][1] = pose
-        appState.recordedPoses[i][2] = shot
+        appState.recordedPoses[availindex][1] = pose
+        appState.recordedPoses[availindex][2] = shot
     }
 
     
@@ -170,7 +182,24 @@ let snapOnClick = function(){
         img.setAttribute("src",element[2])
         img.setAttribute("width","100px")
         img.setAttribute("height","100px")
+        img.onclick = function(){
+            appState.slider.value = element[0].toString();
+            Node.UpdatePose(stickman,element[1])
+        }
         document.getElementById('image-panel').appendChild(img)})
+}
+
+function onKeyPress(e){
+   if(e.code == "ArrowLeft"){
+       stickman.endPosg[0] -= 1;
+   }else if(e.code == "ArrowRight"){
+       stickman.endPosg[0] += 1;
+   }else if(e.code == "ArrowUp"){
+       stickman.endPosg[1] -= 1;
+   }else if(e.code == "ArrowDown"){
+       stickman.endPosg[1] += 1;
+   }
+   Node.UpdatePose(stickman);
 }
 
 window.onload = function () {
@@ -189,7 +218,8 @@ window.onload = function () {
     document.getElementById('snap').onclick = snapOnClick
     document.getElementById('play').onclick = playOnClick
     document.getElementById('stop').onclick = function(){clearInterval(appState.intpfun)}
-     
+
+    document.onkeydown = onKeyPress
     // Create an empty project and a view for the canvas:
     paper.setup(canvas);
     paper.view.autoUpdate = false;
