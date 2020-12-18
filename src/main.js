@@ -133,7 +133,6 @@ let playOnClick = function(){
 }
 
 let interpolate = function(){
-    console.log('interpolating....')
     let t = parseFloat(appState.slider.value)
     let pose = InterpolatePoses(t) 
     Node.UpdatePose(stickman,pose)
@@ -148,11 +147,9 @@ let interpolate = function(){
 let endTimeOnChange = function(){
     appState.maxTime = document.getElementById('endtime').value;
     appState.slider.max = appState.maxTime
-    console.log(appState.maxTime)
 }
 
 let sliderOnChange = function(){
-    console.log(appState.slider.value)
     document.getElementById('endtime').value = appState.slider.value
 }
 
@@ -174,8 +171,11 @@ let snapOnClick = function(){
         appState.recordedPoses[availindex][1] = pose
         appState.recordedPoses[availindex][2] = shot
     }
-
     
+    console.log(appState.recordedPoses)
+    appState.recordedPoses.sort((a,b)=>{
+       return a[0]-b[0]
+    })
     document.getElementById('image-panel').innerHTML = ''
     appState.recordedPoses.forEach(element => { 
         var img = document.createElement("img");
@@ -185,6 +185,7 @@ let snapOnClick = function(){
         img.onclick = function(){
             appState.slider.value = element[0].toString();
             Node.UpdatePose(stickman,element[1])
+            document.getElementById('endtime').value = element[0].toString()
         }
         document.getElementById('image-panel').appendChild(img)})
 }
@@ -228,5 +229,6 @@ window.onload = function () {
         DrawStickMan(stickman);
         paper.view.update();
     }
+
 }
 
