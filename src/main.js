@@ -79,7 +79,6 @@ function InterpolatePoses(t){
       }else{
           let diff1 = (360 + (j2 - j1)) % 360
           let diff2 = (360 + (j1 - j2)) % 360
-          let diff = 0
           if (diff1 > diff2) {
               diff = -diff2
           } else {
