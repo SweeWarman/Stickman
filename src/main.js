@@ -263,8 +263,12 @@ window.onload = function () {
     document.getElementById('stop').onclick = function(){clearInterval(appState.intpfun)}
 
     document.getElementById('download').onclick= ()=>{
-        let textdata = JSON.stringify(appState.recordedPoses)
-        download(textdata, 'poses.txt', 'text/plain')
+        if (appState.recordedPoses.length > 0) {
+            let textdata = JSON.stringify(appState.recordedPoses)
+            download(textdata, 'poses.txt', 'text/plain')
+        }{
+            alert("No recorded poses")
+        }
     }
 
     document.getElementById('file-input').onchange=()=>{
