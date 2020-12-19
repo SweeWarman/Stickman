@@ -73,7 +73,15 @@ function InterpolatePoses(t){
       let j2 = appState.recordedPoses[i][1][name]
       let t1 = appState.recordedPoses[i-1][0]
       let t2 = appState.recordedPoses[i][0]
-      let j  = j1 + (j2-j1)*(t - t1)/(t2-t1)
+      let diff1 = (360 + (j2-j1))%360
+      let diff2 = (360 + (j1-j2))%360
+      let diff  = 0
+      if(diff1 > diff2){
+          diff = -diff2
+      }else{
+          diff = diff1
+      }
+      let j  = j1 + diff*(t - t1)/(t2-t1)
       return j
    }
    for(let i=1;i<appState.recordedPoses.length;++i){
@@ -114,8 +122,15 @@ tool.onMouseDrag = function (event) {
         let location = event.point
         let currJointAngle = Node.angle(appState.selectedPart.parent.endPosg,appState.selectedPart.endPosg) 
         let newJointAngle  = Node.angle(appState.selectedPart.parent.endPosg,[event.point.x,event.point.y])
-        let diff1 = currJointAngle - newJointAngle
-        appState.selectedPart.UpdateJointAngle(appState.selectedPart.angle - diff1*180/Math.PI)
+        let diff1 = (2*Math.PI + (currJointAngle - newJointAngle))%(2*Math.PI)
+        let diff2 = (currJointAngle - newJointAngle)
+        let diff  = 0
+        if(diff1 > Math.abs(diff2)){
+            diff = diff2
+        }else{
+            diff = diff1
+        }
+        appState.selectedPart.UpdateJointAngle((360 + appState.selectedPart.angle - diff*180/Math.PI)%360)
         Node.UpdatePose(stickman)
         appState.update = true
     }
@@ -136,7 +151,7 @@ let interpolate = function(){
     let t = parseFloat(appState.slider.value)
     let pose = InterpolatePoses(t) 
     Node.UpdatePose(stickman,pose)
-    t += 0.1
+    t += 0.01
     appState.slider.value = t.toString()
     document.getElementById('endtime').value = appState.slider.value
     if(t >= parseFloat(appState.maxTime)){
@@ -151,6 +166,9 @@ let endTimeOnChange = function(){
 
 let sliderOnChange = function(){
     document.getElementById('endtime').value = appState.slider.value
+    let t = parseFloat(appState.slider.value)
+    let pose = InterpolatePoses(t) 
+    Node.UpdatePose(stickman,pose)
 }
 
 let snapOnClick = function(){
