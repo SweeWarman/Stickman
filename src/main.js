@@ -8,7 +8,7 @@ let defaultPose = {
     "leftKnee": 95, "leftFoot": 10, "rightKnee": 85, 
     "rightFoot": 0, "torso": -90, "leftElbow": -135,
     "leftWrist": -10, "rightElbow": 135,
-    "rightWrist": 10, "neck": 0 
+    "rightWrist": 10, "neck": 0, "posX": 200, "posY": 200 
 };
 
 let appState = {
@@ -73,13 +73,18 @@ function InterpolatePoses(t){
       let j2 = appState.recordedPoses[i][1][name]
       let t1 = appState.recordedPoses[i-1][0]
       let t2 = appState.recordedPoses[i][0]
-      let diff1 = (360 + (j2-j1))%360
-      let diff2 = (360 + (j1-j2))%360
-      let diff  = 0
-      if(diff1 > diff2){
-          diff = -diff2
+      let diff = 0
+      if(name == "posX" || name == "poxY"){
+          diff = j2-j1
       }else{
-          diff = diff1
+          let diff1 = (360 + (j2 - j1)) % 360
+          let diff2 = (360 + (j1 - j2)) % 360
+          let diff = 0
+          if (diff1 > diff2) {
+              diff = -diff2
+          } else {
+              diff = diff1
+          }
       }
       let j  = j1 + diff*(t - t1)/(t2-t1)
       return j
@@ -96,6 +101,8 @@ function InterpolatePoses(t){
             let l8 =  interpolateJoints(i,t,"rightWrist");
             let l9 =  interpolateJoints(i,t,"torso");
             let l10=  interpolateJoints(i,t,"neck");
+            let l11=  interpolateJoints(i,t,"posX");
+            let l12=  interpolateJoints(i,t,"posY");
             let pose = {
                "leftKnee" : l1,
                "leftFoot" : l2,
@@ -106,7 +113,9 @@ function InterpolatePoses(t){
                "rightElbow" : l7,
                "rightWrist" : l8,
                "torso" :l9,
-               "neck" :l10
+               "neck" :l10,
+               "posX": l11,
+               "posY": l12,
            }
            return pose
        }

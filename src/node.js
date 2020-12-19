@@ -73,6 +73,10 @@ class Node{
 }
 
 export function GetCurrentPose(node,pose={}){
+    if(node.name == "root"){
+        pose["posX"] = node.endPosg[0]
+        pose["posY"] = node.endPosg[1]
+    }
     pose[node.name] = node.angle
     node.children.forEach(element => {
        GetCurrentPose(element,pose);
@@ -109,6 +113,9 @@ export function NewStickMan() {
 export function UpdatePose(node,newpose=null){
     if(newpose != null && node.name != "root"){
         node.UpdateJointAngle(newpose[node.name])
+    }else if(newpose !=null && node.name == "root"){
+        node.endPosg[0] = newpose["posX"]
+        node.endPosg[1] = newpose["posY"]
     }
     node.ComputePose();
     node.children.forEach(element => UpdatePose(element,newpose))
