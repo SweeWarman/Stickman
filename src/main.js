@@ -203,6 +203,10 @@ let snapOnClick = function(){
     appState.recordedPoses.sort((a,b)=>{
        return a[0]-b[0]
     })
+    showRecoredPoses() 
+}
+
+function showRecoredPoses(){
     document.getElementById('image-panel').innerHTML = ''
     appState.recordedPoses.forEach(element => { 
         var img = document.createElement("img");
@@ -230,6 +234,17 @@ function onKeyPress(e){
    Node.UpdatePose(stickman);
 }
 
+// courtesy: https://stackoverflow.com/questions/34156282/how-do-i-save-json-to-local-text-file
+function download(content, fileName, contentType) {
+    var a = document.createElement("a");
+    var file = new Blob([content], {type: contentType});
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+}
+
+
+
 window.onload = function () {
     // Get a reference to the canvas object
     canvas = document.getElementById('myCanvas');
@@ -247,7 +262,24 @@ window.onload = function () {
     document.getElementById('play').onclick = playOnClick
     document.getElementById('stop').onclick = function(){clearInterval(appState.intpfun)}
 
+    document.getElementById('download').onclick= ()=>{
+        let textdata = JSON.stringify(appState.recordedPoses)
+        download(textdata, 'poses.txt', 'text/plain')
+    }
+
+    document.getElementById('file-input').onchange=()=>{
+        let file = document.getElementById('file-input').files
+        const reader = new FileReader();
+        reader.onload = function(e) { 
+            let recposes = JSON.parse(e.target.result) 
+            appState.recordedPoses = recposes;
+            showRecoredPoses()
+        }
+        reader.readAsText(file[0]);
+    }
+    
     document.onkeydown = onKeyPress
+
     // Create an empty project and a view for the canvas:
     paper.setup(canvas);
     paper.view.autoUpdate = false;
